@@ -169,7 +169,9 @@ OUTPUT: Return ONLY the rewritten resume. No analysis, no commentary, no extra s
         });
 
         if (!openaiResponse.ok) {
-            const errorText = await openaiResponse.text();
+            const errorText = await openaiResponse.text(); 
+            console.error('OpenAI API Error:', openaiResponse.status,
+  errorText);
             return res.status(openaiResponse.status).json({
                 error: 'API service error. Please try again later.'
             });
