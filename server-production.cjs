@@ -258,21 +258,24 @@ app.post('/api/extract-job-description', async (req, res) => {
             });
         }
 
-        const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
+        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${process.env.ANTHROPIC_API_KEY}`,
-                'Content-Type': 'application/json',
-                'anthropic-version': '2023-06-01'
+                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'claude-sonnet-4-20250514',
+                model: 'gpt-4o-mini',
                 max_tokens: 2000,
                 temperature: 0.3,
                 messages: [
                     {
+                        role: 'system',
+                        content: 'You are a job description extractor. Extract job descriptions, requirements, and responsibilities from HTML content.'
+                    },
+                    {
                         role: 'user',
-                        content: `You are a job description extractor. Extract the job description, requirements, and responsibilities from the HTML content of a job posting page. Return only the clean job description text, removing any HTML tags, navigation elements, or irrelevant content.
+                        content: `Extract the job description, requirements, and responsibilities from the HTML content below. Return only the clean job description text, removing any HTML tags, navigation elements, or irrelevant content.
 
 HTML content: ${htmlContent.substring(0, 4000)}`
                     }
@@ -280,16 +283,17 @@ HTML content: ${htmlContent.substring(0, 4000)}`
             })
         });
 
-        if (!anthropicResponse.ok) {
-            const errorText = await anthropicResponse.text();
-            return res.status(anthropicResponse.status).json({
+        if (!openaiResponse.ok) {
+            const errorText = await openaiResponse.text();
+            console.error('OpenAI API Error:', openaiResponse.status, errorText);
+            return res.status(openaiResponse.status).json({
                 error: 'API service error. Please try again later.'
             });
         }
 
-        const data = await anthropicResponse.json();
+        const data = await openaiResponse.json();
 
-        if (!data.content || !data.content[0] || !data.content[0].text) {
+        if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
             return res.status(500).json({
                 error: 'Invalid response format from API service'
             });
@@ -297,7 +301,7 @@ HTML content: ${htmlContent.substring(0, 4000)}`
 
         res.json({
             success: true,
-            jobDescription: data.content[0].text
+            jobDescription: data.choices[0].message.content
         });
 
     } catch (error) {
@@ -325,21 +329,24 @@ app.post('/api/tailor-resume', async (req, res) => {
             });
         }
 
-        const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
+        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${process.env.ANTHROPIC_API_KEY}`,
-                'Content-Type': 'application/json',
-                'anthropic-version': '2023-06-01'
+                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'claude-sonnet-4-20250514',
+                model: 'gpt-4o-mini',
                 max_tokens: 4000,
                 temperature: 0.7,
                 messages: [
                     {
+                        role: 'system',
+                        content: 'You are a professional resume writer with expertise in tailoring resumes to specific job descriptions while maintaining truthfulness.'
+                    },
+                    {
                         role: 'user',
-                        content: `You are a professional resume writer. Your task is to rewrite resumes to better align with specific job descriptions while maintaining truthfulness and the candidate's actual experience. Focus on optimizing keywords, highlighting relevant skills, and restructuring content to match the job requirements.
+                        content: `Your task is to rewrite resumes to better align with specific job descriptions while maintaining truthfulness and the candidate's actual experience. Focus on optimizing keywords, highlighting relevant skills, and restructuring content to match the job requirements.
 
 Please rewrite the following resume to better match this job description. Keep all information truthful but optimize the language, keywords, and emphasis to align with the job requirements.
 
@@ -355,16 +362,17 @@ Please provide a complete, well-formatted resume that better targets this specif
             })
         });
 
-        if (!anthropicResponse.ok) {
-            const errorText = await anthropicResponse.text();
-            return res.status(anthropicResponse.status).json({
+        if (!openaiResponse.ok) {
+            const errorText = await openaiResponse.text();
+            console.error('OpenAI API Error:', openaiResponse.status, errorText);
+            return res.status(openaiResponse.status).json({
                 error: 'API service error. Please try again later.'
             });
         }
 
-        const data = await anthropicResponse.json();
+        const data = await openaiResponse.json();
 
-        if (!data.content || !data.content[0] || !data.content[0].text) {
+        if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
             return res.status(500).json({
                 error: 'Invalid response format from API service'
             });
@@ -372,7 +380,7 @@ Please provide a complete, well-formatted resume that better targets this specif
 
         res.json({
             success: true,
-            tailoredResume: data.content[0].text
+            tailoredResume: data.choices[0].message.content
         });
 
     } catch (error) {
@@ -383,24 +391,23 @@ Please provide a complete, well-formatted resume that better targets this specif
     }
 });
 
-// Proxy endpoint for job fit analysis (jobfit.js - first API call)
+// Proxy endpoint for API key testing (jobfit.js - first API call)
 app.post('/api/test-api-key', async (req, res) => {
     try {
-        const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
+        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${process.env.ANTHROPIC_API_KEY}`,
-                'Content-Type': 'application/json',
-                'anthropic-version': '2023-06-01'
+                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'claude-sonnet-4-20250514',
-                max_tokens: 1,
+                model: 'gpt-4o-mini',
+                max_tokens: 5,
                 messages: [{ role: 'user', content: 'Test' }]
             })
         });
 
-        if (anthropicResponse.ok) {
+        if (openaiResponse.ok) {
             res.json({
                 success: true,
                 valid: true
@@ -409,7 +416,7 @@ app.post('/api/test-api-key', async (req, res) => {
             res.json({
                 success: true,
                 valid: false,
-                status: anthropicResponse.status
+                status: openaiResponse.status
             });
         }
 
@@ -450,18 +457,21 @@ Resume: ${processedResume}
 You are a Senior Hiring Manager with over 20 years of experience.  Rate fit 0-100 and provide brief analysis. JSON format:
 {"score": X, "summary": "...", "strengths": ["..."], "gaps": ["..."], "tips": ["..."]}`;
 
-        const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
+        const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${process.env.ANTHROPIC_API_KEY}`,
-                'Content-Type': 'application/json',
-                'anthropic-version': '2023-06-01'
+                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'claude-sonnet-4-20250514',
+                model: 'gpt-4o-mini',
                 max_tokens: 800,
                 temperature: 0.1,
                 messages: [
+                    {
+                        role: 'system',
+                        content: 'You are a Senior Hiring Manager with over 20 years of experience. Analyze job fit between resumes and job descriptions.'
+                    },
                     {
                         role: 'user',
                         content: prompt
@@ -470,22 +480,23 @@ You are a Senior Hiring Manager with over 20 years of experience.  Rate fit 0-10
             })
         });
 
-        if (!anthropicResponse.ok) {
-            const errorText = await anthropicResponse.text();
-            return res.status(anthropicResponse.status).json({
+        if (!openaiResponse.ok) {
+            const errorText = await openaiResponse.text();
+            console.error('OpenAI API Error:', openaiResponse.status, errorText);
+            return res.status(openaiResponse.status).json({
                 error: 'API service error. Please try again later.'
             });
         }
 
-        const data = await anthropicResponse.json();
+        const data = await openaiResponse.json();
 
-        if (!data.content || !data.content[0] || !data.content[0].text) {
+        if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
             return res.status(500).json({
                 error: 'Invalid response format from API service'
             });
         }
 
-        const content = data.content[0].text.trim();
+        const content = data.choices[0].message.content.trim();
 
         try {
             const jsonMatch = content.match(/\{[\s\S]*\}/);
