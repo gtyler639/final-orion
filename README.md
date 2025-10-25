@@ -72,7 +72,7 @@ orion/
 ├── dist/                # Production build output (generated)
 ├── server.js            # Development/production Express server
 ├── server-production.js # Production server with rate limiting
-├── ecosystem.config.js  # PM2 configuration
+├── ecosystem.config.cjs # PM2 configuration
 ├── vite.config.js       # Vite build configuration
 ├── config.env           # Environment variables (API keys)
 ├── package.json         # Dependencies and scripts

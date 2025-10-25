@@ -124,7 +124,7 @@ const allowedOrigins = [
 
 ### 4. Start with PM2
 ```bash
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 pm2 save
 pm2 startup
 ```

@@ -34,7 +34,7 @@ EOF
 
 # Create PM2 ecosystem file
 echo "⚙️ Creating PM2 configuration..."
-cat > ecosystem.config.js << EOF
+cat > ecosystem.config.cjs << EOF
 module.exports = {
   apps: [{
     name: '$SERVICE_NAME',
@@ -146,7 +146,7 @@ nginx -t
 
 # Start the application with PM2
 echo "🚀 Starting application with PM2..."
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.cjs
 pm2 save
 pm2 startup
 

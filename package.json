@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "start": "node server.js",
     "prod": "node server-production.js",
-    "pm2:start": "pm2 start ecosystem.config.js",
+    "pm2:start": "pm2 start ecosystem.config.cjs",
     "pm2:stop": "pm2 stop orion-react-app",
     "pm2:restart": "pm2 restart orion-react-app",
     "pm2:logs": "pm2 logs orion-react-app",

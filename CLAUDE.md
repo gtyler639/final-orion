@@ -253,7 +253,7 @@ orion/
 ├── public/                # Static assets (images, etc.)
 ├── server.js              # Development/production backend
 ├── server-production.js   # Production backend with rate limiting
-├── ecosystem.config.js    # PM2 configuration
+├── ecosystem.config.cjs   # PM2 configuration
 ├── vite.config.js         # Vite build configuration
 ├── config.env             # Environment variables (not in git)
 ├── index.html             # HTML template for Vite
