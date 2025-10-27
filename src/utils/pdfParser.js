@@ -1,7 +1,8 @@
 import * as pdfjsLib from 'pdfjs-dist'
 
-// Set up the worker - use a working CDN version
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js`
+// Set up the worker - use unpkg CDN which is more reliable
+// Version must match the installed pdfjs-dist version (3.11.174)
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`
 
 /**
  * Extract text content from a PDF file
