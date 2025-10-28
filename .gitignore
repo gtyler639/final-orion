@@ -101,3 +101,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Auto-generated PDF.js worker (copied by Vite plugin)
+public/pdf.worker.min.js

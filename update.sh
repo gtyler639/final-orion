@@ -18,7 +18,11 @@ git pull origin main
 
 # Install any new dependencies
 echo "📦 Installing/updating dependencies..."
-npm install --production
+npm install
+
+# Build React application
+echo "🏗️ Building React application..."
+npm run build
 
 # Restart the application
 echo "🚀 Restarting application..."

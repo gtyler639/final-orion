@@ -22,7 +22,11 @@ chmod -R 755 $PROJECT_DIR
 
 # Install dependencies
 echo "📦 Installing dependencies..."
-npm install --production
+npm install
+
+# Build React application
+echo "🏗️ Building React application..."
+npm run build
 
 # Create production environment file
 echo "🔧 Setting up environment variables..."
