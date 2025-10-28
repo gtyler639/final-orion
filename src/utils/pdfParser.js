@@ -1,8 +1,8 @@
 import * as pdfjsLib from 'pdfjs-dist'
 
-// Set up the worker - use unpkg CDN which is more reliable
-// Version must match the installed pdfjs-dist version (3.11.174)
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js`
+// Set up the worker - use local bundled version (no CDN dependency!)
+// Worker file is copied to public folder by Vite plugin
+pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js'
 
 /**
  * Extract text content from a PDF file
