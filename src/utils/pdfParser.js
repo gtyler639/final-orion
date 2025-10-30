@@ -1,8 +1,9 @@
 import * as pdfjsLib from 'pdfjs-dist'
+import pdfjsWorker from 'pdfjs-dist/build/pdf.worker.min.js?url'
 
-// Set up the worker - use local bundled version (no CDN dependency!)
-// Worker file is copied to public folder by Vite plugin
-pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js'
+// Set up the worker - Vite will bundle the worker automatically
+// Using ?url import ensures proper resolution in both dev and production
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfjsWorker
 
 /**
  * Extract text content from a PDF file
