@@ -421,7 +421,8 @@ app.post('/api/test-api-key', async (req, res) => {
         }
 
     } catch (error) {
-        res.status(500).json({
+        res.status(500).jso
+        n({
             success: false,
             error: 'Internal server error',
             message: error.message

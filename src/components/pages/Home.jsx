@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 function Home() {
   return (
-    <div className="app">
+    <>
       {/* Hero Section */}
       <div className="hero-section">
         <div className="hero-left">
@@ -102,7 +102,7 @@ function Home() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 

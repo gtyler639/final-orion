@@ -96,7 +96,7 @@ function Cater() {
         </div>
       )}
 
-      <div className="main-content">
+      <div className="tool-layout">
         <div className="input-section">
           <div className="section-header">
             <div className="section-icon">📝</div>

@@ -97,7 +97,7 @@ function Resume() {
         </div>
       )}
 
-      <div className="main-content">
+      <div className="tool-layout">
         <div className="input-section">
           <h2 className="section-title">Enter Your Resume Here</h2>
 

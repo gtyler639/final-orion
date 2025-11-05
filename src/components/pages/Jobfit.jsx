@@ -108,7 +108,7 @@ function Jobfit() {
         </div>
       )}
 
-      <div className="main-content">
+      <div className="tool-layout">
         <div className="input-column">
           <div className="form-section" id="scroll">
             <h2>Upload Your Resume Here</h2>
