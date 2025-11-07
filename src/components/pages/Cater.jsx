@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../services/api'
+import { getApiUrl } from '../../utils/apiConfig'
 
 function Cater() {
   const [resumeText, setResumeText] = useState('')
@@ -59,15 +60,63 @@ function Cater() {
 
     setIsLoading(true)
     setError('')
+    setTailoredResume('') // Clear previous result
 
     try {
-      const response = await api.tailorResume(resumeText, jobDescription)
+      const response = await fetch(getApiUrl('/api/tailor-resume'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          currentResume: resumeText,
+          jobDescription: jobDescription
+        })
+      })
 
-      if (response.success && response.tailoredResume) {
-        setTailoredResume(response.tailoredResume)
-      } else {
-        throw new Error('Invalid response from server')
+      if (!response.ok) {
+        throw new Error('API request failed')
       }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+
+        if (done) {
+          break
+        }
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+
+        // Keep the last incomplete line in the buffer
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6)
+
+            if (data === '[DONE]') {
+              continue
+            }
+
+            try {
+              const parsed = JSON.parse(data)
+              if (parsed.content) {
+                setTailoredResume(prev => prev + parsed.content)
+              } else if (parsed.error) {
+                setError(parsed.error)
+              }
+            } catch (e) {
+              // Skip invalid JSON
+            }
+          }
+        }
+      }
+
     } catch (error) {
       console.error('Error tailoring resume:', error)
       setError('Error tailoring resume. Please make sure the backend server is running and try again.')

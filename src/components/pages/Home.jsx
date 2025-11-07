@@ -31,6 +31,13 @@ function Home() {
           <img className="brand" src="https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_Bélo.svg" alt="Airbnb" />
           <img className="brand" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Lockheed_Martin_logo.svg/768px-Lockheed_Martin_logo.svg.png?20230620162959" alt="Lockheed Martin" />
           <img className="brand" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Coca-Cola_logo.svg/768px-Coca-Cola_logo.svg.png?20250612123859" alt="Coca-Cola" />
+          <img className="brand" src="https://upload.wikimedia.org/wikipedia/commons/5/53/KP_logo.svg" alt="Kaiser Permanente" />
+          {/* Duplicate logos for infinite scroll */}
+          <img className="brand" src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" alt="Google" />
+          <img className="brand" src="https://upload.wikimedia.org/wikipedia/commons/6/69/Airbnb_Logo_Bélo.svg" alt="Airbnb" />
+          <img className="brand" src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/99/Lockheed_Martin_logo.svg/768px-Lockheed_Martin_logo.svg.png?20230620162959" alt="Lockheed Martin" />
+          <img className="brand" src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/ce/Coca-Cola_logo.svg/768px-Coca-Cola_logo.svg.png?20250612123859" alt="Coca-Cola" />
+          <img className="brand" src="https://upload.wikimedia.org/wikipedia/commons/5/53/KP_logo.svg" alt="Kaiser Permanente" />
         </div>
       </div>
 

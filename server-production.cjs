@@ -6,11 +6,13 @@ require('dotenv').config({ path: './config.env' });
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Production CORS settings
+// CORS settings - Allow both development and production origins
 const allowedOrigins = [
     'http://localhost:3000',
     'http://127.0.0.1:3000',
-    'http://159.203.136.138',
+    'http://localhost:5173',      // Vite dev server
+    'http://127.0.0.1:5173',      // Vite dev server (alternative)
+    'http://159.203.136.138',     // VPS IP
     'http://159.203.136.138:3000',
     'https://159.203.136.138',
     'https://159.203.136.138:3000'
@@ -21,14 +23,16 @@ app.use(cors({
     origin: function (origin, callback) {
         // Allow requests with no origin (mobile apps, curl, etc.)
         if (!origin) return callback(null, true);
-        
+
         if (allowedOrigins.indexOf(origin) !== -1) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
         }
     },
-    credentials: true
+    credentials: true,
+    exposedHeaders: ['Content-Type', 'Cache-Control', 'Connection'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json({ limit: '10mb' }));
@@ -88,7 +92,7 @@ const rateLimit = (req, res, next) => {
 // Apply rate limiting to API routes
 app.use('/api', rateLimit);
 
-// Proxy endpoint for resume rewriting (resume.js)
+// Proxy endpoint for resume rewriting (resume.js) - STREAMING
 app.post('/api/rewrite-resume', async (req, res) => {
     try {
         const { resumeText } = req.body;
@@ -145,6 +149,11 @@ ${resumeText}
 
 OUTPUT: Return ONLY the rewritten resume. No analysis, no commentary, no extra sections. Just a clean, powerful, ATS-optimized resume that will get this candidate hired.`;
 
+        // Set headers for streaming
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+
         const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -155,6 +164,7 @@ OUTPUT: Return ONLY the rewritten resume. No analysis, no commentary, no extra s
                 model: 'gpt-4o-mini',
                 max_tokens: 3000,
                 temperature: 0.3,
+                stream: true, // Enable streaming
                 messages: [
                     {
                         role: 'system',
@@ -169,32 +179,44 @@ OUTPUT: Return ONLY the rewritten resume. No analysis, no commentary, no extra s
         });
 
         if (!openaiResponse.ok) {
-            const errorText = await openaiResponse.text(); 
-            console.error('OpenAI API Error:', openaiResponse.status,
-  errorText);
-            return res.status(openaiResponse.status).json({
-                error: 'API service error. Please try again later.'
-            });
+            const errorText = await openaiResponse.text();
+            console.error('OpenAI API Error:', openaiResponse.status, errorText);
+            res.write(`data: ${JSON.stringify({ error: 'API service error' })}\n\n`);
+            return res.end();
         }
 
-        const data = await openaiResponse.json();
+        // Stream the response
+        for await (const chunk of openaiResponse.body) {
+            const text = chunk.toString();
+            const lines = text.split('\n').filter(line => line.trim() !== '');
 
-        if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
-            return res.status(500).json({
-                error: 'Invalid response format from API service'
-            });
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const data = line.slice(6);
+                    if (data === '[DONE]') {
+                        res.write('data: [DONE]\n\n');
+                        continue;
+                    }
+
+                    try {
+                        const parsed = JSON.parse(data);
+                        const content = parsed.choices[0]?.delta?.content;
+                        if (content) {
+                            res.write(`data: ${JSON.stringify({ content })}\n\n`);
+                        }
+                    } catch (e) {
+                        // Skip invalid JSON
+                    }
+                }
+            }
         }
 
-        res.json({
-            success: true,
-            rewrittenResume: data.choices[0].message.content
-        });
+        res.end();
 
     } catch (error) {
-        res.status(500).json({
-            error: 'Internal server error',
-            message: error.message
-        });
+        console.error('Streaming error:', error);
+        res.write(`data: ${JSON.stringify({ error: 'Internal server error' })}\n\n`);
+        res.end();
     }
 });
 
@@ -312,7 +334,7 @@ HTML content: ${htmlContent.substring(0, 4000)}`
     }
 });
 
-// Proxy endpoint for resume tailoring (cater.js - second API call)
+// Proxy endpoint for resume tailoring (cater.js - second API call) - STREAMING
 app.post('/api/tailor-resume', async (req, res) => {
     try {
         const { currentResume, jobDescription } = req.body;
@@ -329,6 +351,11 @@ app.post('/api/tailor-resume', async (req, res) => {
             });
         }
 
+        // Set headers for streaming
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Connection', 'keep-alive');
+
         const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -339,6 +366,7 @@ app.post('/api/tailor-resume', async (req, res) => {
                 model: 'gpt-4o-mini',
                 max_tokens: 4000,
                 temperature: 0.7,
+                stream: true, // Enable streaming
                 messages: [
                     {
                         role: 'system',
@@ -365,29 +393,42 @@ Please provide a complete, well-formatted resume that better targets this specif
         if (!openaiResponse.ok) {
             const errorText = await openaiResponse.text();
             console.error('OpenAI API Error:', openaiResponse.status, errorText);
-            return res.status(openaiResponse.status).json({
-                error: 'API service error. Please try again later.'
-            });
+            res.write(`data: ${JSON.stringify({ error: 'API service error' })}\n\n`);
+            return res.end();
         }
 
-        const data = await openaiResponse.json();
+        // Stream the response
+        for await (const chunk of openaiResponse.body) {
+            const text = chunk.toString();
+            const lines = text.split('\n').filter(line => line.trim() !== '');
 
-        if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
-            return res.status(500).json({
-                error: 'Invalid response format from API service'
-            });
+            for (const line of lines) {
+                if (line.startsWith('data: ')) {
+                    const data = line.slice(6);
+                    if (data === '[DONE]') {
+                        res.write('data: [DONE]\n\n');
+                        continue;
+                    }
+
+                    try {
+                        const parsed = JSON.parse(data);
+                        const content = parsed.choices[0]?.delta?.content;
+                        if (content) {
+                            res.write(`data: ${JSON.stringify({ content })}\n\n`);
+                        }
+                    } catch (e) {
+                        // Skip invalid JSON
+                    }
+                }
+            }
         }
 
-        res.json({
-            success: true,
-            tailoredResume: data.choices[0].message.content
-        });
+        res.end();
 
     } catch (error) {
-        res.status(500).json({
-            error: 'Internal server error',
-            message: error.message
-        });
+        console.error('Streaming error:', error);
+        res.write(`data: ${JSON.stringify({ error: 'Internal server error' })}\n\n`);
+        res.end();
     }
 });
 

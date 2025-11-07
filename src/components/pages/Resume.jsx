@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../../services/api'
 import { extractTextFromPDF } from '../../utils/pdfParser'
+import { getApiUrl } from '../../utils/apiConfig'
 
 function Resume() {
   const [inputMethod, setInputMethod] = useState('text')
@@ -24,15 +25,60 @@ function Resume() {
 
     setIsLoading(true)
     setError('')
+    setRewrittenResume('') // Clear previous result
 
     try {
-      const response = await api.rewriteResume(resumeText)
+      const response = await fetch(getApiUrl('/api/rewrite-resume'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ resumeText })
+      })
 
-      if (response.success && response.rewrittenResume) {
-        setRewrittenResume(response.rewrittenResume)
-      } else {
-        throw new Error('Invalid response from server')
+      if (!response.ok) {
+        throw new Error('API request failed')
       }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      while (true) {
+        const { done, value } = await reader.read()
+
+        if (done) {
+          break
+        }
+
+        buffer += decoder.decode(value, { stream: true })
+        const lines = buffer.split('\n')
+
+        // Keep the last incomplete line in the buffer
+        buffer = lines.pop() || ''
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6)
+
+            if (data === '[DONE]') {
+              continue
+            }
+
+            try {
+              const parsed = JSON.parse(data)
+              if (parsed.content) {
+                setRewrittenResume(prev => prev + parsed.content)
+              } else if (parsed.error) {
+                setError(parsed.error)
+              }
+            } catch (e) {
+              // Skip invalid JSON
+            }
+          }
+        }
+      }
+
     } catch (error) {
       console.error('Error rewriting resume:', error)
       setError('Error rewriting resume. Please make sure the backend server is running and try again.')

@@ -374,6 +374,7 @@ body {
     margin: 40px auto;
     max-width: 1200px;
     border-radius: 20px;
+    overflow: hidden;
 }
 
 .trust-label {
@@ -384,19 +385,31 @@ body {
 
 .trust-logos {
     display: flex;
-    justify-content: center;
     align-items: center;
-    gap: 50px;
-    flex-wrap: wrap;
+    gap: 80px;
+    animation: slide 20s linear infinite;
+    width: max-content;
+}
+
+@keyframes slide {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
 }
 
 .brand {
     height: 35px;
-    opacity: 0.7;
-    transition: opacity 0.3s ease;
+    filter: grayscale(100%);
+    opacity: 0.6;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
 }
 
 .brand:hover {
+    filter: grayscale(0%);
     opacity: 1;
 }
 
